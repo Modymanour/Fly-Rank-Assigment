@@ -16,3 +16,11 @@ app.post('/hello', (req, res) => {
     const { name } = req.body;
     res.json({ message: `Hello, ${name}!` });
 })
+
+app.get('', (req, res) => {
+    res.send({"name" : "Task API", "Version" : 1.0, "Endpoints" : ["/tasks", "/hello"]})
+})
+
+app.get('/health', (req, res) => {
+    res.send({"status" : "ok"})
+})
