@@ -15,6 +15,7 @@ app.listen(
     () => console.log(`server is running on Port : ${PORT}`)
 );
 
+//Hello Endpoint
 app.post('/hello', (req, res) => {
     if(!req.body.name){
         return res.status(400).json({ error: "Name is required"});
@@ -23,20 +24,27 @@ app.post('/hello', (req, res) => {
     res.json({ message: `Hello, ${name}!` });
 })
 
+//Get Application Data
 app.get('', (req, res) => {
     res.send({"name" : "Task API", "Version" : 1.0, "Endpoints" : ["/tasks", "/hello"]})
 })
 
+//Get server health
 app.get('/health', (req, res) => {
     res.send({"status" : "ok"})
 })
 
+//Get all tasks
 app.get('/tasks', (req, res) => {
     // res.json(tasks);
     res.status(200).send({status: "success", data: tasks});
 });
 
+//Get Task by Id
 app.get('/tasks/:id', (req, res) => {
+    if(!req.params.id){
+        return res.status(404).json({ error: "Task Id is missing" });
+    }
     const taskId = parseInt(req.params.id);
     const task = tasks.find(t => t.id === taskId);
     if (!task) {
@@ -45,6 +53,7 @@ app.get('/tasks/:id', (req, res) => {
     res.status(200).json({ status: "success", data: task });
 })
 
+//Create a new task
 app.post('/tasks', (req, res) => {
     if(!req.body.title){
         return res.status(400).json({ error: "Title is required" });
@@ -58,3 +67,29 @@ app.post('/tasks', (req, res) => {
     tasks.push(newTask);
     res.status(201).json({ status: "Created", data: newTask });
 });
+
+app.put('/tasks/:id', (req, res) => {
+    if(!req.params.id){
+        return res.status(404).json({ "error": "Task Id is missing"})
+    }
+    if(!req.body.title){
+        return res.status(400).json({ "error": "Task Title is missing"})
+    }
+    const taskId = parseInt(req.params.id);
+    var task = tasks.find(t => t.id === taskId);
+    task.title = req.body.title;
+    res.status(200).json({ status: "success", data: task });
+});
+
+app.delete('/tasks/:id', (req, res) => {
+    if(!req.params.id){
+        return res.status(404).json({ "error": "Task Id is missing"})
+    }
+    const taskId = parseInt(req.params.id);
+    task = tasks.find(t => t.id === taskId);
+    if(!task){
+        return res.status(404).json({ "error": "Task not found"})
+    }
+    tasks = tasks.filter(t => t.id !== taskId);
+    res.status(204).json({ status: "success", message: "Task deleted successfully" });
+})
