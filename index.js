@@ -44,3 +44,17 @@ app.get('/tasks/:id', (req, res) => {
     }
     res.status(200).json({ status: "success", data: task });
 })
+
+app.post('/tasks', (req, res) => {
+    if(!req.body.title){
+        return res.status(400).json({ error: "Title is required" });
+    }
+    const title = req.body.title;
+    const newTask = {
+        id: tasks.length + 1,
+        title: title,
+        done: false
+    }
+    tasks.push(newTask);
+    res.status(201).json({ status: "Created", data: newTask });
+});
