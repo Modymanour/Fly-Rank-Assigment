@@ -19,6 +19,10 @@
   },
   "homepage": "https://github.com/Modymanour/Assigment-1#readme",
   "dependencies": {
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "swagger": "^0.0.1",
+    "swagger-jsdoc": "^6.3.0",
+    "swagger-node-express": "^1.2.3",
+    "swagger-ui-express": "^5.0.1"
   }
 }
