@@ -22,12 +22,27 @@ app.post('/hello', (req, res) => {
     }
     const { name } = req.body;
     res.json({ message: `Hello, ${name}!` });
-})
+});
 
 //Get Application Data
 app.get('', (req, res) => {
     res.send({"name" : "Task API", "Version" : 1.0, "Endpoints" : ["/tasks", "/hello"]})
-})
+});
+
+//Get Application Stats
+app.get('/stats', (req, res) => {
+    res.send({"total_tasks" : tasks.length, "done" : tasks.filter(t => t.done).length, "open" : tasks.filter(t => !t.done).length}) 
+});
+
+//Seed & Reset
+app.post('/reset', (req, res) => {
+    tasks = [
+        { id: 1, title: "Task 1", done: false },
+        { id: 2, title: "Task 2", done: false },
+        { id: 3, title: "Task 3", done: false },
+    ];
+    res.status(200).json({ status: "success", message: "Tasks reset successfully" });
+});
 
 //Get server health
 app.get('/health', (req, res) => {
@@ -39,6 +54,22 @@ app.get('/tasks', (req, res) => {
     // res.json(tasks);
     res.status(200).send({status: "success", data: tasks});
 });
+
+//Query for task
+app.get('/tasks/search', (req, res) => {
+    var curtitles = tasks;
+    if(req.query.title){
+        curtitles = curtitles.filter(t => t.title.toLowerCase().includes(req.query.title.toLowerCase()));
+    }
+    if(req.query.done){
+        const doneStatus = req.query.done.toLowerCase() === 'true';
+        curtitles = curtitles.filter(t => t.done == doneStatus);
+    }
+    if(curtitles.length === 0){
+        return res.status(404).json({ "error": "No tasks found matching the criteria or tasks are empty" });
+    }   
+    res.status(200).json({ status: "success", data: curtitles})
+})
 
 //Get Task by Id
 app.get('/tasks/:id', (req, res) => {
@@ -68,6 +99,7 @@ app.post('/tasks', (req, res) => {
     res.status(201).json({ status: "Created", data: newTask });
 });
 
+//Update a task
 app.put('/tasks/:id', (req, res) => {
     if(!req.params.id){
         return res.status(404).json({ "error": "Task Id is missing"})
@@ -81,6 +113,7 @@ app.put('/tasks/:id', (req, res) => {
     res.status(200).json({ status: "success", data: task });
 });
 
+//Delete a task
 app.delete('/tasks/:id', (req, res) => {
     if(!req.params.id){
         return res.status(404).json({ "error": "Task Id is missing"})
@@ -93,3 +126,4 @@ app.delete('/tasks/:id', (req, res) => {
     tasks = tasks.filter(t => t.id !== taskId);
     res.status(204).json({ status: "success", message: "Task deleted successfully" });
 })
+
