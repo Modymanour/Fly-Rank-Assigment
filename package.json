@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "node swagger.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -19,7 +20,8 @@
   },
   "homepage": "https://github.com/Modymanour/Assigment-1#readme",
   "dependencies": {
-    "express": "^5.2.1",
+    "express": "^4.18.2",
+    "swagger-autogen": "^2.23.0",
     "swagger": "^0.0.1",
     "swagger-jsdoc": "^6.3.0",
     "swagger-node-express": "^1.2.3",

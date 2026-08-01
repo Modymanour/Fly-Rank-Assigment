@@ -1,8 +1,10 @@
 const express = require('express');
-const app  = require('express')();
-// const swaggerJsdoc = require('swagger-jsdoc');
-// const swaggerUi = require('swagger-ui-express');
+const app = express();
+const fs = require('fs');
+const path = require('path');
+const swaggerUi = require('swagger-ui-express');
 const PORT = 3000;
+
 
 var tasks = [
     { id: 1, title: "Task 1", done: false },
@@ -27,14 +29,19 @@ app.use(express.json());
 //   apis: ['./index.js'],
 // };
 
-// const swaggerSpec = swaggerJsdoc(swaggerOptions);
-// app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.get('/api-docs.json', (req, res) => {
+  const file = path.join(process.cwd(), 'api-docs.json');
+  if (fs.existsSync(file)) return res.sendFile(file);
+  return res.status(404).json({ error: 'api-docs.json not found yet — trigger some requests first' });
+});
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(null, { swaggerUrl: '/api-docs.json' }));
 
 app.listen(
     PORT,
     () => {
         console.log(`server is running on Port : ${PORT}`);
-        // console.log(`Swagger docs available at http://localhost:${PORT}/api-docs`);
+        console.log(`Swagger docs available at http://localhost:${PORT}/api-docs`);
     }
 );
 
