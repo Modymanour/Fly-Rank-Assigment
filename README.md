@@ -74,6 +74,13 @@ Content-Type: application/json; charset=utf-8
 
 - `express`
 
+
+## I vs AI
+There are some differences ,offcourse, between our approaches:
+- The AI more so implemented swagger using inline @swagger followed by yaml like configuration. If it was me, I wouldve either made a seperate yaml file or found a way to automate the process
+- The AI implemented more variable validation more so than me. That is something that I will be working on since I think it is a good habit
+- The AI used a lot more built in functions than me, and I think that is credited to me being new to the language
+
 ## Repository
 
 `https://github.com/Modymanour/Fly-Rank-Assigment`

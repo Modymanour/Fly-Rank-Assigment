@@ -1,5 +1,7 @@
 const express = require('express');
 const app  = require('express')();
+// const swaggerJsdoc = require('swagger-jsdoc');
+// const swaggerUi = require('swagger-ui-express');
 const PORT = 3000;
 
 var tasks = [
@@ -10,9 +12,30 @@ var tasks = [
 
 app.use(express.json());
 
+// const swaggerDefinition = {
+//   openapi: '3.0.0',
+//   info: {
+//     title: 'AI Version Task API',
+//     version: '1.0.0',
+//     description: 'A small in-memory task API with Swagger documentation.',
+//   },
+//   servers: [{ url: `http://localhost:${PORT}` }],
+// };
+
+// const swaggerOptions = {
+//   swaggerDefinition,
+//   apis: ['./index.js'],
+// };
+
+// const swaggerSpec = swaggerJsdoc(swaggerOptions);
+// app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 app.listen(
     PORT,
-    () => console.log(`server is running on Port : ${PORT}`)
+    () => {
+        console.log(`server is running on Port : ${PORT}`);
+        // console.log(`Swagger docs available at http://localhost:${PORT}/api-docs`);
+    }
 );
 
 //Hello Endpoint
@@ -52,7 +75,7 @@ app.get('/health', (req, res) => {
 //Get all tasks
 app.get('/tasks', (req, res) => {
     // res.json(tasks);
-    res.status(200).send({status: "success", data: tasks});
+    res.status(200).send({status: "success", data: pagination(req, res, tasks) });
 });
 
 //Query for task
@@ -68,7 +91,7 @@ app.get('/tasks/search', (req, res) => {
     if(curtitles.length === 0){
         return res.status(404).json({ "error": "No tasks found matching the criteria or tasks are empty" });
     }   
-    res.status(200).json({ status: "success", data: curtitles})
+    res.status(200).json({ status: "success", data: pagination(req, res, curtitles) });
 })
 
 //Get Task by Id
@@ -127,3 +150,13 @@ app.delete('/tasks/:id', (req, res) => {
     res.status(204).json({ status: "success", message: "Task deleted successfully" });
 })
 
+function pagination(req, res, list) {
+    if(!req.query.page && !req.query.limit){
+        return list;
+    }
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    return list.slice(startIndex, endIndex);
+}

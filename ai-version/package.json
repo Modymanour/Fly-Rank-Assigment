@@ -1,0 +1,14 @@
+{
+  "name": "ai-version",
+  "version": "1.0.0",
+  "description": "In-memory Express task API with Swagger documentation.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "swagger-jsdoc": "^6.3.0",
+    "swagger-ui-express": "^5.0.1"
+  }
+}
