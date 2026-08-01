@@ -19,7 +19,6 @@ The server listens on port `3000` by default.
 
 | Method | Path | Description |
 | --- | --- | --- |
-| GET | `/` | Get metadata about the API and available endpoints |
 | GET | `/health` | Get server health status |
 | GET | `/stats` | Get task counts: total, done, open |
 | GET | `/tasks` | Get all tasks |
@@ -56,6 +55,9 @@ Content-Type: application/json; charset=utf-8
   }
 }
 ```
+
+## Postman Sample
+<img width="1920" height="1044" alt="image" src="https://github.com/user-attachments/assets/c179bc47-f1fa-47ef-a2d7-b6f857f748b3" />
 
 ## Notes
 
