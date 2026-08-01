@@ -19,6 +19,7 @@ The server listens on port `3000` by default.
 
 | Method | Path | Description |
 | --- | --- | --- |
+| GET | `/` | Get server meta data |
 | GET | `/health` | Get server health status |
 | GET | `/stats` | Get task counts: total, done, open |
 | GET | `/tasks` | Get all tasks |
@@ -73,9 +74,13 @@ Content-Type: application/json; charset=utf-8
 ## Dependencies
 
 - `express`
+- `Swagger`
 
 
 ## I vs AI
+### Prompt Image
+<img width="909" height="728" alt="image" src="https://github.com/user-attachments/assets/956b416d-498c-48aa-a722-3847276f60ad" />
+
 There are some differences ,offcourse, between our approaches:
 - The AI more so implemented swagger using inline @swagger followed by yaml like configuration. If it was me, I wouldve either made a seperate yaml file or found a way to automate the process
 - The AI implemented more variable validation more so than me. That is something that I will be working on since I think it is a good habit
