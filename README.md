@@ -4,7 +4,15 @@ Simple Express task management API for Assignment 1.
 
 ## What this is
 
-A small REST API built with Node.js and Express that manages a simple in-memory task list. It supports retrieving tasks, searching, creating, updating, deleting, and basic health/status endpoints.
+A small REST API built with Node.js and Express that manages a SQLite database task list. It supports retrieving tasks, searching, creating, updating, deleting, and basic health/status endpoints.
+
+## Why SQLite
+
+SQLite was chosen for its compatibility with Expressjs along with its ease of use: single file, zero setup and an autmoatic (file name).db created immediately upon run.
+
+### tasks.db run on DB Browser
+<img width="1920" height="1040" alt="image" src="https://github.com/user-attachments/assets/a1fd7a3d-99f4-43e5-ba2a-a58799ffa45b" />
+
 
 ## Install & Run
 
@@ -69,12 +77,17 @@ Content-Type: application/json; charset=utf-8
 ## Project files
 
 - `index.js` — Express server and API routes
-- `package.json` — project metadata and dependencies
+- `database.js` — Database configuration file with 3 seeded tasks rows
+- `swagger.js` — Swagger configuration file
+- `api-docs.json` — resulted json from the swagger js file that is used by swagger to opne
+- `tasks.db` — The database
+- `package.json` — Project metadata and dependencies
 
 ## Dependencies
 
 - `express`
 - `Swagger`
+- `Better-SQLite`
 
 
 ## I vs AI
