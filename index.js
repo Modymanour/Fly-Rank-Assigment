@@ -46,16 +46,21 @@ app.get('', (req, res) => {
 
 //Get Application Stats
 app.get('/stats', (req, res) => {
-    res.send({"total_tasks" : tasks.length, "done" : tasks.filter(t => t.done).length, "open" : tasks.filter(t => !t.done).length}) 
+    const tasks = db.prepare("Select * from tasks").all();
+    const finishedTasks = tasks.filter(t => t.done === 1).length;
+    const pendingTasks = tasks.length - finishedTasks;
+    res.send({"totalTasks" : tasks.length, "finishedTasks" : finishedTasks, "pendingTasks" : pendingTasks});
 });
 
 //Seed & Reset
 app.post('/reset', (req, res) => {
-    tasks = [
-        { id: 1, title: "Task 1", done: false },
-        { id: 2, title: "Task 2", done: false },
-        { id: 3, title: "Task 3", done: false },
-    ];
+    db.exec("DELETE FROM tasks");
+    db.exec(`
+        Insert into tasks (title, done) values
+        ('Laundry', 0),
+        ('Cooking', 0),
+        ('Cleaning', 0)
+    `);
     res.status(200).json({ status: "success", message: "Tasks reset successfully" });
 });
 
@@ -73,13 +78,25 @@ app.get('/tasks', (req, res) => {
 
 //Query for task
 app.get('/tasks/search', (req, res) => {
-    var curtitles = tasks;
+    var curtitles = db.prepare("SELECT * FROM tasks").all();
     if(req.query.title){
         curtitles = curtitles.filter(t => t.title.toLowerCase().includes(req.query.title.toLowerCase()));
     }
     if(req.query.done){
         const doneStatus = req.query.done.toLowerCase() === 'true';
         curtitles = curtitles.filter(t => t.done == doneStatus);
+    }
+    //filtering on title only for now
+    if(req.query.OrderBy){
+        if(("asc").includes(req.query.OrderBy.toLowerCase())){ // does not have to be exact match could be a, as, asc, sc and so forth
+            curtitles.sort((a, b) => a.title.localeCompare(b.title));
+        }
+        else if(("desc").includes(req.query.OrderBy.toLowerCase())){// does not have to be exact match could be d, de, desc, sc and so forth
+            curtitles.sort((a, b) => b.title.localeCompare(a.title));
+        }
+        else{
+            return res.status(400).json({ "error": "Invalid OrderBy value. Use 'asc' or 'desc'." });
+        }
     }
     if(curtitles.length === 0){
         return res.status(404).json({ "error": "No tasks found matching the criteria or tasks are empty" });
@@ -140,7 +157,7 @@ app.put('/tasks/:id', (req, res) => {
         }
         task.done = req.body.done ? 1 : 0;
     }
-    db.prepare("UPDATE tasks SET title = ?, done = ? WHERE id = ?").run(task.title, task.done, taskId);
+    db.prepare("UPDATE tasks SET title = ?, done = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(task.title, task.done, taskId);
     res.status(200).json({ status: "success", data: task });
 });
 
