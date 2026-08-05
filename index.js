@@ -93,6 +93,9 @@ app.get('/tasks/:id', (req, res) => {
         return res.status(404).json({ error: "Task Id is missing" });
     }
     const taskId = parseInt(req.params.id);
+    if(isNaN(taskId)){
+        return res.status(400).json({ "error": "Given Task Id was not valid"});
+    }
     const task = db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId);
     if (!task) {
         return res.status(404).json({ error: "Task not found" });
@@ -119,12 +122,25 @@ app.put('/tasks/:id', (req, res) => {
     if(!req.params.id){
         return res.status(404).json({ "error": "Task Id is missing"})
     }
-    if(!req.body.title){
-        return res.status(400).json({ "error": "Task Title is missing"})
+    if(!req.body.title && !req.body.done){
+        return res.status(400).json({ "error": "both Updatable data are missing"})
     }
     const taskId = parseInt(req.params.id);
-    var task = tasks.find(t => t.id === taskId);
-    task.title = req.body.title;
+    if(isNaN(taskId)){
+        return res.status(400).json({ "error": "Given Task Id was not valid"});
+    }
+    var task = db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId);
+    if(!task){
+        return res.status(404).json({ "error": "Task not found"})
+    }
+    if(req.body.title) task.title = req.body.title;
+    if(req.body.done !== undefined) {
+        if(typeof req.body.done !== 'boolean') {
+            return res.status(400).json({ "error": "done must be a boolean value" });
+        }
+        task.done = req.body.done ? 1 : 0;
+    }
+    db.prepare("UPDATE tasks SET title = ?, done = ? WHERE id = ?").run(task.title, task.done, taskId);
     res.status(200).json({ status: "success", data: task });
 });
 
@@ -134,11 +150,14 @@ app.delete('/tasks/:id', (req, res) => {
         return res.status(404).json({ "error": "Task Id is missing"})
     }
     const taskId = parseInt(req.params.id);
-    task = tasks.find(t => t.id === taskId);
+    if(isNaN(taskId)){
+        return res.status(400).json({ "error": "Given Task Id was not valid"});
+    }
+    task = db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId);
     if(!task){
         return res.status(404).json({ "error": "Task not found"})
     }
-    tasks = tasks.filter(t => t.id !== taskId);
+    db.prepare("DELETE FROM tasks WHERE id = ?").run(taskId);
     res.status(204).json({ status: "success", message: "Task deleted successfully" });
 })
 
