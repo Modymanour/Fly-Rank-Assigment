@@ -107,11 +107,10 @@ app.post('/tasks', (req, res) => {
     }
     const title = req.body.title;
     const newTask = {
-        id: tasks.length + 1,
         title: title,
-        done: false
+        done: 0
     }
-    tasks.push(newTask);
+    db.prepare("Insert into tasks (title, done) values (?, ?)").run(newTask.title, newTask.done);
     res.status(201).json({ status: "Created", data: newTask });
 });
 
