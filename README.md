@@ -86,6 +86,16 @@ There are some differences ,offcourse, between our approaches:
 - The AI implemented more variable validation more so than me. That is something that I will be working on since I think it is a good habit
 - The AI used a lot more built in functions than me, and I think that is credited to me being new to the language
 
+
+## Running SQL by Hand
+
+There is a section in assigment 2 where I have to run 5 SQL commands by hand and since I have run them all I will be documenting what two of them done:
+```bash
+UPDATE tasks SET done = 1;
+DELETE FROM tasks WHERE done = 1;
+```
+The first one makes all the tasks in my database done & the second deletes all the done tasks so effectively the database is empty until I restart the backend again
+
 ## Repository
 
 `https://github.com/Modymanour/Fly-Rank-Assigment`
