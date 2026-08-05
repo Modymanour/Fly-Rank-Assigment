@@ -3,31 +3,21 @@ const app = express();
 const fs = require('fs');
 const path = require('path');
 const swaggerUi = require('swagger-ui-express');
+const db = require('./database.js');
 const PORT = 3000;
 
 
-var tasks = [
-    { id: 1, title: "Task 1", done: false },
-    { id: 2, title: "Task 2", done: false },
-    { id: 3, title: "Task 3", done: false },
-];
+// var tasks = [
+//     { id: 1, title: "Task 1", done: false },
+//     { id: 2, title: "Task 2", done: false },
+//     { id: 3, title: "Task 3", done: false },
+// ];
 
 app.use(express.json());
 
-// const swaggerDefinition = {
-//   openapi: '3.0.0',
-//   info: {
-//     title: 'AI Version Task API',
-//     version: '1.0.0',
-//     description: 'A small in-memory task API with Swagger documentation.',
-//   },
-//   servers: [{ url: `http://localhost:${PORT}` }],
-// };
-
-// const swaggerOptions = {
-//   swaggerDefinition,
-//   apis: ['./index.js'],
-// };
+console.log("Database initialized and ready to use");
+const rows = db.prepare('SELECT * FROM tasks').all();
+console.log("Current tasks in database:", rows);
 
 app.get('/api-docs.json', (req, res) => {
   const file = path.join(process.cwd(), 'api-docs.json');
