@@ -1,17 +1,10 @@
 const express = require('express');
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
+const db = require('./database');
 
 const app = express();
-const PORT = 3000;
-
-const initialTasks = [
-  { id: 1, title: 'Buy groceries', category: 'personal', done: false },
-  { id: 2, title: 'Finish assignment', category: 'work', done: false },
-  { id: 3, title: 'Clean room', category: 'home', done: true },
-];
-
-let tasks = JSON.parse(JSON.stringify(initialTasks));
+const PORT = process.env.PORT || 3001;
 
 app.use(express.json());
 
@@ -20,7 +13,7 @@ const swaggerDefinition = {
   info: {
     title: 'AI Version Task API',
     version: '1.0.0',
-    description: 'A small in-memory task API with Swagger documentation.',
+    description: 'A SQLite-backed task API with Swagger documentation.',
   },
   servers: [{ url: `http://localhost:${PORT}` }],
 };
@@ -45,6 +38,14 @@ function parsePagination(req) {
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 10;
   return { page: Math.max(page, 1), limit: Math.max(limit, 1) };
+}
+
+function getAllTasks() {
+  db.seedDatabase();
+  return db.prepare('SELECT * FROM tasks ORDER BY id ASC').all().map((task) => ({
+    ...task,
+    done: Boolean(task.done),
+  }));
 }
 
 /**
@@ -131,6 +132,7 @@ app.get('/health', (req, res) => {
  *                   example: 2
  */
 app.get('/stats', (req, res) => {
+  const tasks = getAllTasks();
   const total = tasks.length;
   const done = tasks.filter((task) => task.done).length;
   const open = total - done;
@@ -159,8 +161,21 @@ app.get('/stats', (req, res) => {
  *                     $ref: '#/components/schemas/Task'
  */
 app.post('/reset', (req, res) => {
-  tasks = JSON.parse(JSON.stringify(initialTasks));
-  res.json({ status: 'success', tasks });
+  db.exec('DELETE FROM tasks');
+  const insert = db.prepare(`
+    INSERT INTO tasks (title, category, done)
+    VALUES (?, ?, ?)
+  `);
+  const defaults = [
+    ['Buy groceries', 'personal', 0],
+    ['Finish assignment', 'work', 0],
+    ['Clean room', 'home', 1],
+  ];
+  const transaction = db.transaction((rows) => {
+    rows.forEach((row) => insert.run(row[0], row[1], row[2]));
+  });
+  transaction(defaults);
+  res.json({ status: 'success', tasks: getAllTasks() });
 });
 
 /**
@@ -219,6 +234,12 @@ app.post('/reset', (req, res) => {
  *                     $ref: '#/components/schemas/Task'
  */
 app.get('/tasks', (req, res) => {
+  let rows = db.prepare('SELECT * FROM tasks ORDER BY id ASC').all();
+  const tasks = rows.map((task) => ({
+    ...task,
+    done: Boolean(task.done),
+  }));
+
   let filtered = [...tasks];
   if (req.query.title) {
     filtered = filtered.filter((task) =>
@@ -309,11 +330,11 @@ app.get('/tasks/search', (req, res) => {
  */
 app.get('/tasks/:id', (req, res) => {
   const id = Number(req.params.id);
-  const task = tasks.find((item) => item.id === id);
+  const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
   if (!task) {
     return res.status(404).json({ status: 'error', error: 'Task not found' });
   }
-  res.json({ status: 'success', data: task });
+  res.json({ status: 'success', data: { ...task, done: Boolean(task.done) } });
 });
 
 /**
@@ -345,13 +366,23 @@ app.post('/tasks', (req, res) => {
   if (!title) {
     return res.status(400).json({ status: 'error', error: 'Title is required' });
   }
+
+  const count = db.prepare('SELECT COUNT(*) AS count FROM tasks').get().count;
+  if (count >= 3) {
+    return res.status(409).json({ status: 'error', error: 'Task limit reached. Delete an existing task before creating a new one.' });
+  }
+
+  const insert = db.prepare(`
+    INSERT INTO tasks (title, category, done)
+    VALUES (?, ?, ?)
+  `);
+  const result = insert.run(title, category, done ? 1 : 0);
   const newTask = {
-    id: tasks.length ? Math.max(...tasks.map((task) => task.id)) + 1 : 1,
+    id: result.lastInsertRowid,
     title,
     category,
     done: Boolean(done),
   };
-  tasks.push(newTask);
   res.status(201).json({ status: 'success', data: newTask });
 });
 
@@ -389,15 +420,26 @@ app.post('/tasks', (req, res) => {
  */
 app.put('/tasks/:id', (req, res) => {
   const id = Number(req.params.id);
-  const task = tasks.find((item) => item.id === id);
-  if (!task) {
+  const existing = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
+  if (!existing) {
     return res.status(404).json({ status: 'error', error: 'Task not found' });
   }
+
   const { title, category, done } = req.body;
-  if (title !== undefined) task.title = title;
-  if (category !== undefined) task.category = category;
-  if (done !== undefined) task.done = Boolean(done);
-  res.json({ status: 'success', data: task });
+  const update = db.prepare(`
+    UPDATE tasks
+    SET title = COALESCE(?, title),
+        category = COALESCE(?, category),
+        done = COALESCE(?, done),
+        updated_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `);
+
+  const nextDone = done !== undefined ? (done ? 1 : 0) : existing.done;
+  update.run(title ?? null, category ?? null, nextDone, id);
+
+  const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
+  res.json({ status: 'success', data: { ...task, done: Boolean(task.done) } });
 });
 
 /**
@@ -419,11 +461,12 @@ app.put('/tasks/:id', (req, res) => {
  */
 app.delete('/tasks/:id', (req, res) => {
   const id = Number(req.params.id);
-  const taskIndex = tasks.findIndex((item) => item.id === id);
-  if (taskIndex < 0) {
+  const existing = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
+  if (!existing) {
     return res.status(404).json({ status: 'error', error: 'Task not found' });
   }
-  tasks.splice(taskIndex, 1);
+  db.prepare('DELETE FROM tasks WHERE id = ?').run(id);
+  db.seedDatabase();
   res.status(204).send();
 });
 

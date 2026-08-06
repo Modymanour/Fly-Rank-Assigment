@@ -99,6 +99,14 @@ There are some differences ,offcourse, between our approaches:
 - The AI implemented more variable validation more so than me. That is something that I will be working on since I think it is a good habit
 - The AI used a lot more built in functions than me, and I think that is credited to me being new to the language
 
+---
+Assigment 2 
+### Prompt Image
+
+Overall, the result from the AI's work is extremely similar to my work except for 2 things: one major & one minor.
+Due to me saying "and seed 3 rows so the database under any circumstances have 3 rows" it made the database able to only have 3 rows. I meant in a case of 
+errors or bugs happening, or a person just starting the db for it to have 3 rows; Yet, my wording made it seem like there should only be 3 rows ever. The minor difference is the use of db.prepare in which the AI keeps the command saved and I just use them when needed.
+
 
 ## Running SQL by Hand
 
