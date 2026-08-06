@@ -102,10 +102,12 @@ There are some differences ,offcourse, between our approaches:
 ---
 Assigment 2 
 ### Prompt Image
+<img width="802" height="645" alt="image" src="https://github.com/user-attachments/assets/38c33832-34ef-4b25-9252-7bf253a1c4a3" />
 
 Overall, the result from the AI's work is extremely similar to my work except for 2 things: one major & one minor.
-Due to me saying "and seed 3 rows so the database under any circumstances have 3 rows" it made the database able to only have 3 rows. I meant in a case of 
-errors or bugs happening, or a person just starting the db for it to have 3 rows; Yet, my wording made it seem like there should only be 3 rows ever. The minor difference is the use of db.prepare in which the AI keeps the command saved and I just use them when needed.
+- Due to me saying "and seed 3 rows so the database under any circumstances have 3 rows" it made the database able to only have 3 rows. I meant in a case of 
+errors or bugs happening, or a person just starting the db for it to have 3 rows; Yet, my wording made it seem like there should only be 3 rows ever.
+- The minor difference is the use of db.prepare in which the AI keeps the command saved and I just use them when needed.
 
 
 ## Running SQL by Hand
