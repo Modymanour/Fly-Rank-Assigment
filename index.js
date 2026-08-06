@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const swaggerUi = require('swagger-ui-express');
 const db = require('./database.js');
+const { get } = require('https');
 const PORT = 3000;
 
 
@@ -125,13 +126,23 @@ app.post('/tasks', (req, res) => {
     if(!req.body.title){
         return res.status(400).json({ error: "Title is required" });
     }
-    const title = req.body.title;
-    const newTask = {
-        title: title,
-        done: 0
+    try{
+        const insert = db.prepare("Insert into tasks (title, done) values (?, ?)");
+        const createTask = db.transaction((title) => {
+            const newTask = {
+                title: title,
+                done: 0
+            }
+            insert.run(newTask.title, newTask.done);
+            return newTask;
+        });
+        const title = req.body.title;
+        const newTask = createTask(title);
+        res.status(201).json({ status: "Created", data: newTask });
     }
-    db.prepare("Insert into tasks (title, done) values (?, ?)").run(newTask.title, newTask.done);
-    res.status(201).json({ status: "Created", data: newTask });
+    catch(err){
+        return res.status(400).json({ "error": err.message });
+    }
 });
 
 //Update a task
@@ -146,19 +157,33 @@ app.put('/tasks/:id', (req, res) => {
     if(isNaN(taskId)){
         return res.status(400).json({ "error": "Given Task Id was not valid"});
     }
-    var task = db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId);
-    if(!task){
-        return res.status(404).json({ "error": "Task not found"})
+    try{
+
+        const update = db.prepare("UPDATE tasks SET title = ?, done = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?");
+        const get = db.prepare("SELECT * FROM tasks WHERE id = ?");
+        const updateTask = db.transaction((taskId, title, done) => {
+            const task = get.get(taskId);
+            if(!task){
+                throw new Error("Task not found");
+            }
+            if(req.body.title) task.title = req.body.title;
+            if(req.body.done !== undefined) {
+                if(typeof req.body.done !== 'boolean') {
+                    throw new Error("Invalid value for 'done'. It should be a boolean.");
+                }
+                task.done = req.body.done ? 1 : 0;
+            }
+            
+            update.run(task.title, task.done, taskId);
+            return task;
+        });
+        
+        const task = updateTask(taskId, req.body.title, req.body.done);
+        res.status(200).json({ status: "success", data: task });
     }
-    if(req.body.title) task.title = req.body.title;
-    if(req.body.done !== undefined) {
-        if(typeof req.body.done !== 'boolean') {
-            return res.status(400).json({ "error": "done must be a boolean value" });
-        }
-        task.done = req.body.done ? 1 : 0;
+    catch(err){
+        return res.status(400).json({ "error": err.message });
     }
-    db.prepare("UPDATE tasks SET title = ?, done = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(task.title, task.done, taskId);
-    res.status(200).json({ status: "success", data: task });
 });
 
 //Delete a task
@@ -170,12 +195,24 @@ app.delete('/tasks/:id', (req, res) => {
     if(isNaN(taskId)){
         return res.status(400).json({ "error": "Given Task Id was not valid"});
     }
-    task = db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId);
-    if(!task){
-        return res.status(404).json({ "error": "Task not found"})
+    try{
+
+        const get = db.prepare("SELECT * FROM tasks WHERE id = ?");
+        const deleteTask = db.transaction((taskId) => {
+            const task = get.get(taskId);
+            if(!task){
+                throw new Error("Task not found");
+            }
+            const delete_ = db.prepare("DELETE FROM tasks WHERE id = ?");
+            delete_.run(taskId);
+        })
+        deleteTask(taskId);
+        
+        res.status(204).json({ status: "success", message: "Task deleted successfully" });
     }
-    db.prepare("DELETE FROM tasks WHERE id = ?").run(taskId);
-    res.status(204).json({ status: "success", message: "Task deleted successfully" });
+    catch(err){
+        return res.status(400).json({ "error": err.message });  
+    }
 })
 
 function pagination(req, res, list) {

@@ -89,6 +89,9 @@ Content-Type: application/json; charset=utf-8
 - `Swagger`
 - `Better-SQLite`
 
+## Storage is "just an implementation detail"
+The shift from assigment 1 -> assigment 2 showed no changed in the apis themselves rather the logic inside the functions. the Exterior look that swaggger or postman provided has not changed and that is because the modules they interact with is not which applies the buisness logic, but rather calls functions to do the logic themselves.
+
 
 ## I vs AI
 ### Prompt Image
