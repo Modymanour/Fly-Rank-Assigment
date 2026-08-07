@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const swaggerUi = require('swagger-ui-express');
 const db = require('./database.js');
+const pool = require('./postgresDb.js');
 const { get } = require('https');
 const PORT = 3000;
 
@@ -11,9 +12,20 @@ const PORT = 3000;
 
 app.use(express.json());
 
-console.log("Database initialized and ready to use");
-const rows = db.prepare('SELECT * FROM tasks').all();
-console.log("Current tasks in database:", rows);
+// console.log("Database initialized and ready to use");
+// const rows = db.prepare('SELECT * FROM tasks').all();
+// console.log("Current tasks in database:", rows);
+
+console.log("Postgres database initialized and ready to use");
+(async () => {
+    try {
+        await pool.initializationPromise;
+        const pgRows = await pool.query('SELECT * FROM tasks');
+        console.log("Current tasks in Postgres database:", pgRows.rows);
+    } catch (err) {
+        console.error("Postgres query error:", err.message);
+    }
+})();
 
 app.get('/api-docs.json', (req, res) => {
   const file = path.join(process.cwd(), 'api-docs.json');
