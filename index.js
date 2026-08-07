@@ -83,10 +83,10 @@ app.get('/health', (req, res) => {
 })
 
 //Get all tasks
-app.get('/tasks', (req, res) => {
+app.get('/tasks', async (req, res) => {
     // res.json(tasks);
-    const data = db.prepare("SELECT * FROM tasks").all();
-    res.status(200).send({status: "success", data: pagination(req, res, data) });
+    const data = await pool.query('SELECT * FROM tasks');
+    res.status(200).send({status: "success", data: pagination(req, res, data.rows) });
 });
 
 //Query for task
@@ -118,7 +118,7 @@ app.get('/tasks/search', (req, res) => {
 })
 
 //Get Task by Id
-app.get('/tasks/:id', (req, res) => {
+app.get('/tasks/:id', async (req, res) => {
     if(!req.params.id){
         return res.status(404).json({ error: "Task Id is missing" });
     }
@@ -126,11 +126,11 @@ app.get('/tasks/:id', (req, res) => {
     if(isNaN(taskId)){
         return res.status(400).json({ "error": "Given Task Id was not valid"});
     }
-    const task = db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId);
+    const task = await pool.query('SELECT * FROM tasks WHERE id = $1', [taskId]);
     if (!task) {
         return res.status(404).json({ error: "Task not found" });
     }
-    res.status(200).json({ status: "success", data: task });
+    res.status(200).json({ status: "success", data: task.rows });
 })
 
 //Create a new task
