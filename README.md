@@ -1,6 +1,6 @@
 # Task API
 
-Simple Express task management API for Assignment 1.
+Simple Express task management API for the Fly Rank Assigments.
 
 ## What this is
 
@@ -17,8 +17,7 @@ SQLite was chosen for its compatibility with Expressjs along with its ease of us
 ## Install & Run
 
 ```bash
-npm install
-node index.js (or node . from any terminal if in project folder)
+docker compose up
 ```
 
 The server listens on port `3000` by default.
