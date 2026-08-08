@@ -78,9 +78,16 @@ app.post('/reset', (req, res) => {
 });
 
 //Get server health
-app.get('/health', (req, res) => {
-    res.send({"status" : "ok"})
-})
+app.get('/health', async (req, res) => {
+    try {
+        const health = await pool.query('SELECT 1');
+        if(health){
+            res.status(200).json({ status: "success", message: "Server is healthy" });
+        }
+    } catch (err) {
+        res.status(500).json({ status: "error", message: "Server is not healthy" });
+    }
+});
 
 //Get all tasks
 app.get('/tasks', async (req, res) => {

@@ -47,6 +47,7 @@ async function initDb() {
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
+        CREATE INDEX idx_tasks_title ON tasks(title);
     `);
 
     const countResult = await db.query('SELECT COUNT(*) AS count FROM tasks');

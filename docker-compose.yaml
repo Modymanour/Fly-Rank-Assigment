@@ -18,5 +18,15 @@ services:
       - POSTGRES_DB=tasks
     volumes:
       - tasks_data:/var/postgresql/data
+  redis:
+    image: redis:latest
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --save 60 1 --loglevel warning --requirepass dev
+    volumes:
+      - cache:/data
 volumes:
   tasks_data:
+  cache:
+    driver: local
