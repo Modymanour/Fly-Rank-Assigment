@@ -90,8 +90,9 @@ app.get('/tasks', async (req, res) => {
 });
 
 //Query for task
-app.get('/tasks/search', (req, res) => {
-    var curtitles = db.prepare("SELECT * FROM tasks").all();
+app.get('/tasks/search', async (req, res) => {
+    var curtitles = await pool.query('SELECT * FROM tasks');
+    curtitles = curtitles.rows;
     if(req.query.title){
         curtitles = curtitles.filter(t => t.title.toLowerCase().includes(req.query.title.toLowerCase()));
     }
@@ -134,31 +135,27 @@ app.get('/tasks/:id', async (req, res) => {
 })
 
 //Create a new task
-app.post('/tasks', (req, res) => {
+app.post('/tasks', async (req, res) => {
     if(!req.body.title){
         return res.status(400).json({ error: "Title is required" });
     }
     try{
-        const insert = db.prepare("Insert into tasks (title, done) values (?, ?)");
-        const createTask = db.transaction((title) => {
-            const newTask = {
-                title: title,
-                done: 0
-            }
-            insert.run(newTask.title, newTask.done);
-            return newTask;
-        });
-        const title = req.body.title;
-        const newTask = createTask(title);
+        await pool.query('BEGIN');
+        const newTask = {
+            title: req.body.title,
+            done: 0
+        };
+        await pool.query('INSERT INTO tasks (title, done) VALUES ($1, $2) RETURNING *', [newTask.title, newTask.done]);
+        await pool.query('COMMIT');
         res.status(201).json({ status: "Created", data: newTask });
-    }
-    catch(err){
+    } catch (err) {
+        await pool.query('ROLLBACK');
         return res.status(400).json({ "error": err.message });
     }
 });
 
 //Update a task
-app.put('/tasks/:id', (req, res) => {
+app.put('/tasks/:id', async (req, res) => {
     if(!req.params.id){
         return res.status(404).json({ "error": "Task Id is missing"})
     }
@@ -170,36 +167,30 @@ app.put('/tasks/:id', (req, res) => {
         return res.status(400).json({ "error": "Given Task Id was not valid"});
     }
     try{
-
-        const update = db.prepare("UPDATE tasks SET title = ?, done = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?");
-        const get = db.prepare("SELECT * FROM tasks WHERE id = ?");
-        const updateTask = db.transaction((taskId, title, done) => {
-            const task = get.get(taskId);
-            if(!task){
-                throw new Error("Task not found");
+        await pool.query('BEGIN');
+        const task = (await pool.query('SELECT * FROM tasks WHERE id = $1', [taskId])).rows[0];
+        if (!task) {
+            return res.status(404).json({ error: "Task not found" });
+        }
+        if(req.body.title) task.title = req.body.title;
+        if(req.body.done !== undefined) {
+            if(typeof req.body.done !== 'boolean') {
+                throw new Error("Invalid value for 'done'. It should be a boolean.");
             }
-            if(req.body.title) task.title = req.body.title;
-            if(req.body.done !== undefined) {
-                if(typeof req.body.done !== 'boolean') {
-                    throw new Error("Invalid value for 'done'. It should be a boolean.");
-                }
-                task.done = req.body.done ? 1 : 0;
-            }
-            
-            update.run(task.title, task.done, taskId);
-            return task;
-        });
-        
-        const task = updateTask(taskId, req.body.title, req.body.done);
+            task.done = req.body.done ? 1 : 0;
+        }
+        await pool.query('UPDATE tasks set title = $1, done = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3', [task.title, task.done, taskId]);
+        await pool.query('COMMIT');
         res.status(200).json({ status: "success", data: task });
     }
     catch(err){
+        await pool.query('ROLLBACK');
         return res.status(400).json({ "error": err.message });
     }
 });
 
 //Delete a task
-app.delete('/tasks/:id', (req, res) => {
+app.delete('/tasks/:id', async (req, res) => {
     if(!req.params.id){
         return res.status(404).json({ "error": "Task Id is missing"})
     }
@@ -208,21 +199,18 @@ app.delete('/tasks/:id', (req, res) => {
         return res.status(400).json({ "error": "Given Task Id was not valid"});
     }
     try{
+        await pool.query('BEGIN');
+        const task = (await pool.query('SELECT * FROM tasks WHERE id = $1', [taskId])).rows[0];
+        if (!task) {
+            return res.status(404).json({ error: "Task not found" });
+        }
+        await pool.query('DELETE FROM tasks WHERE id = $1', [taskId]);
+        await pool.query('COMMIT');
 
-        const get = db.prepare("SELECT * FROM tasks WHERE id = ?");
-        const deleteTask = db.transaction((taskId) => {
-            const task = get.get(taskId);
-            if(!task){
-                throw new Error("Task not found");
-            }
-            const delete_ = db.prepare("DELETE FROM tasks WHERE id = ?");
-            delete_.run(taskId);
-        })
-        deleteTask(taskId);
-        
         res.status(204).json({ status: "success", message: "Task deleted successfully" });
     }
     catch(err){
+        await pool.query("ROLLBACK");
         return res.status(400).json({ "error": err.message });  
     }
 })
