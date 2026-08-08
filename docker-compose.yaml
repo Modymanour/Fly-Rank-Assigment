@@ -1,0 +1,22 @@
+
+services:
+  api:
+    build: .
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgres://postgres:Mody_1152004@db:5432/tasks
+  db:
+    image: postgres:latest
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=Mody_1152004
+      - POSTGRES_DB=tasks
+    volumes:
+      - tasks_data:/var/postgresql/data
+volumes:
+  tasks_data:
