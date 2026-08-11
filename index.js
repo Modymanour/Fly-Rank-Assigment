@@ -227,6 +227,33 @@ app.delete('/tasks/:id', async (req, res) => {
     }
 })
 
+app.post('/sign-up', async (req, res) => {
+    const { email, password } = req.body;
+    if (!email || !password) {
+        return res.status(400).json({ error: "Email and password are required" });
+    }
+    const response = await supabase.auth.signUp({ email, password });
+    if (response.error){
+        return res.status(400).json({ error: response.error.message });
+    }
+    else{
+        return res.status(201).json({ message: "User signed up successfully", data: response.data });
+    }
+})
+
+app.post('/sign-in', async (req, res) => {
+    const { email, password } = req.body;
+    if (!email || !password) {
+        return res.status(400).json({ error: "Email and password are required" });
+    }
+    const response = await supabase.auth.signInWithPassword({ email, password });
+    if (response.error){
+        return res.status(400).json({ error: response.error.message });
+    }
+    else{
+        return res.status(200).json({ message: "User signed in successfully", data: response.data });
+    }
+})
 function pagination(req, res, list) {
     if(!req.query.page && !req.query.limit){
         return list;
