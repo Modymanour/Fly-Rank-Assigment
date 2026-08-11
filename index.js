@@ -5,10 +5,15 @@ const path = require('path');
 const swaggerUi = require('swagger-ui-express');
 const db = require('./sqlitedatabase.js');
 const pool = require('./postgresDb.js');
+const { createClient } = require('@supabase/supabase-js');
 const { get } = require('https');
 const PORT = 3000;
 
 
+const supabase = createClient(
+    process.env.SUPABASE_URL,
+     process.env.SUPABASE_KEY
+);
 
 app.use(express.json());
 

@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/Modymanour/Assigment-1#readme",
   "dependencies": {
+    "@supabase/server": "^1.4.1",
     "better-sqlite3": "^13.0.2",
     "dotenv": "^17.4.2",
     "express": "^4.18.2",
