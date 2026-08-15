@@ -259,23 +259,19 @@ app.post('/sign-in', async (req, res) => {
     }
 })
 
-app.get('/protected/profile', (req, res) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) {
-        return res.status(401).json({ error: "Authorization header is missing" });
+app.get('/protected/profile', authenticateToken, (req, res) => {
+    return res.status(200).json({ message: "User profile retrieved successfully", data: req.user });
+});
+
+app.post('/logout', authenticateToken, async (req, res) => {
+    const response = await supabase.auth.signOut();
+    if (response.error){
+        return res.status(400).json({ error: response.error.message });
     }
-    const token = authHeader.split(' ')[1];
-    supabase.auth.getUser(token)
-        .then(response => {
-            if (response.error) {
-                return res.status(401).json({ error: response.error.message });
-            }
-            return res.status(200).json({ message: "User profile retrieved successfully", data: response.data.user });
-        })
-        .catch(err => {
-            return res.status(500).json({ error: "Internal server error" });
-        });
-})
+    else{
+        return res.status(200).json({ message: "User logged out successfully" });
+    }
+});
 
 function pagination(req, res, list) {
     if(!req.query.page && !req.query.limit){
@@ -286,4 +282,21 @@ function pagination(req, res, list) {
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
     return list.slice(startIndex, endIndex);
+}
+
+function authenticateToken(req, res, next){
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if(token == null) return res.sendStatus(401);
+    supabase.auth.getUser(token)
+        .then(response => {
+            if (response.error) {
+                return res.status(401).json({ error: response.error.message });
+            }
+            req.user = response.data.user;
+            next();
+        })
+        .catch(err => {
+            return res.status(500).json({ error: "Internal server error" });
+        });
 }
