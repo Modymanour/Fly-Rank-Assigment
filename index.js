@@ -48,6 +48,10 @@ app.listen(
     }
 );
 
+
+app.get('/public/info', (req, res) => {
+    res.status(200).json({"message": "Welcome stranger! This info is public." });
+});
 //Hello Endpoint
 app.post('/hello', (req, res) => {
     if(!req.body.name){
@@ -254,6 +258,25 @@ app.post('/sign-in', async (req, res) => {
         return res.status(200).json({ message: "User signed in successfully", data: response.data });
     }
 })
+
+app.get('/protected/profile', (req, res) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).json({ error: "Authorization header is missing" });
+    }
+    const token = authHeader.split(' ')[1];
+    supabase.auth.getUser(token)
+        .then(response => {
+            if (response.error) {
+                return res.status(401).json({ error: response.error.message });
+            }
+            return res.status(200).json({ message: "User profile retrieved successfully", data: response.data.user });
+        })
+        .catch(err => {
+            return res.status(500).json({ error: "Internal server error" });
+        });
+})
+
 function pagination(req, res, list) {
     if(!req.query.page && !req.query.limit){
         return list;
