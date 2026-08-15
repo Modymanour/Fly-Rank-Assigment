@@ -259,10 +259,34 @@ app.post('/sign-in', async (req, res) => {
     }
 })
 
+/**
+ * @openapi
+ * /protected/profile:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User profile retrieved successfully
+ *       401:
+ *         description: Missing or invalid JWT token
+ */
 app.get('/protected/profile', authenticateToken, (req, res) => {
     return res.status(200).json({ message: "User profile retrieved successfully", data: req.user });
 });
 
+/**
+ * @openapi
+ * /logout:
+ *   post:
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User logged out successfully
+ *       401:
+ *         description: Missing or invalid JWT token
+ */
 app.post('/logout', authenticateToken, async (req, res) => {
     const response = await supabase.auth.signOut();
     if (response.error){
