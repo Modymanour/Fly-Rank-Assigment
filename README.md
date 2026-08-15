@@ -6,7 +6,7 @@ Simple Express task management API for the Fly Rank Assigments.
 
 A small REST API built with Node.js and Express that manages a SQLite database task list. It supports retrieving tasks, searching, creating, updating, deleting, and basic health/status endpoints.
 
-## Why SQLite
+## Why SQLite (not used anymore)
 
 SQLite was chosen for its compatibility with Expressjs along with its ease of use: single file, zero setup and an autmoatic (file name).db created immediately upon run.
 
@@ -15,9 +15,13 @@ SQLite was chosen for its compatibility with Expressjs along with its ease of us
 
 
 ## Install & Run
+You will need to configure a env file with the actual values of the postgresql database & the supabase configuration. Examples of the data can be seen in the .env-example file.
 
+### To run the application
 ```bash
 docker compose up
+or
+docker compose ip --build (if changes happened to the api backend)
 ```
 
 The server listens on port `3000` by default.
@@ -37,6 +41,11 @@ The server listens on port `3000` by default.
 | DELETE | `/tasks/:id` | Delete a task by ID |
 | POST | `/hello` | Return greeting message from JSON `{ name }` |
 | POST | `/reset` | Reset the tasks list to the initial seed data |
+| POST | `/sign-in` | Signing in into supabase |
+| POST | `/sign-up` | registering a user into supabase |
+| GET | `/public/info` | Returns a configured message |
+| GET | `/protected/profile` | Gets a user profile through the given token |
+| POST | `/logout` | Logs out the user and expires the token |
 
 ## Example curl
 
@@ -87,6 +96,8 @@ Content-Type: application/json; charset=utf-8
 - `express`
 - `Swagger`
 - `Better-SQLite`
+- `Postgresql`
+- `Supabase`
 
 ## Storage is "just an implementation detail"
 The shift from assigment 1 -> assigment 2 showed no changed in the apis themselves rather the logic inside the functions. the Exterior look that swaggger or postman provided has not changed and that is because the modules they interact with is not which applies the buisness logic, but rather calls functions to do the logic themselves.
