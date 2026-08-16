@@ -14,7 +14,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "bugs": {
     "url": "https://github.com/Modymanour/Assigment-1/issues"
   },
@@ -22,6 +22,7 @@
   "dependencies": {
     "@supabase/server": "^1.4.1",
     "better-sqlite3": "^13.0.2",
+    "cheerio": "^1.2.0",
     "dotenv": "^17.4.2",
     "express": "^4.18.2",
     "pg": "^8.22.0",
