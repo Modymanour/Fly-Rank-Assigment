@@ -74,7 +74,11 @@ Content-Type: application/json; charset=utf-8
 ```
 
 ## Postman Sample
-<img width="1920" height="1044" alt="image" src="https://github.com/user-attachments/assets/c179bc47-f1fa-47ef-a2d7-b6f857f748b3" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/4553dcd1-ce5b-4e66-9583-41bf28debcb8" />
+
+## Swagger Sample
+<img width="1918" height="1080" alt="image" src="https://github.com/user-attachments/assets/b455c1e5-8ccc-4e17-9f4e-2bc3f447198c" />
+
 
 ## Notes
 
