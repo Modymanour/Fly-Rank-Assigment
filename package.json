@@ -30,6 +30,7 @@
     "swagger-autogen": "^2.23.0",
     "swagger-jsdoc": "^6.3.0",
     "swagger-node-express": "^1.2.3",
-    "swagger-ui-express": "^5.0.1"
+    "swagger-ui-express": "^5.0.1",
+    "zod": "^4.4.3"
   }
 }

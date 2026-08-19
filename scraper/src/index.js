@@ -1,6 +1,8 @@
 import * as cheerio from 'cheerio';
 import fs from 'fs';
+import { error } from 'node:console';
 import { setTimeout } from 'node:timers/promises';
+import { record, z } from 'zod';
 
 const BASE_URL = 'https://books.toscrape.com/';
 const CACHE_DIR = '../cache';
@@ -55,6 +57,7 @@ async function getBooksLinks(html){
     }
 }
 async function getBookRecords(books, sourcePage){
+    const errors = [];
     const records = [];
     const cachePath = `${CACHE_DIR}/books`;
     for (const bookPath of books) {
@@ -66,36 +69,76 @@ async function getBookRecords(books, sourcePage){
             const $ = await cheerio.fromURL(url);
             const ratingClass = $('p.star-rating').attr('class')?.split(' ').find((value) => value !== 'star-rating');
             const description = $('#product_description').next('p').text().trim();
-            records.push({
+            const data = ({
                 title: $('div.product_main h1').text().trim(),
                 product_url: url,
                 price_text: $('p.price_color').first().text().trim(),
+                price_gbp: parseFloat($('p.price_color').first().text().trim().replace('£',''),),
                 availability_text: $('p.instock.availability').first().text().trim(),
                 rating_text: ratingClass ?? null,
                 description: description || null,
                 source_page: sourcePage,
                 fetched_at: fetchedAt,
             });
+            const validation = validateData(data);
+            if(validation.success) records.push(validation.data);
+            else{
+                const error = {
+                    product_url: url,
+                    error: validation.error,
+                    fetched_at: fetchedAt
+                }
+                errors.push(error);
+                console.error("data did not pass", validation.error);
+            }
         } catch (err) {
             console.error(`Error parsing ${url}:`, err.message);
         }
+    };
+    //saving books
+    try{
+        fs.mkdirSync('../output', { recursive: true });
+        const savedBooks = fs.existsSync('../output/books.json')
+            ? JSON.parse(fs.readFileSync('../output/books.json', 'utf-8'))
+            : [];
+        const existingUrls = new Set(savedBooks.map((book) => book.product_url));
+        const newBooks = records.filter((book) => !existingUrls.has(book.product_url));
+        fs.writeFileSync('../output/books.json', JSON.stringify([...savedBooks, ...newBooks], null, 2), 'utf-8');
+        console.log(`${newBooks.length} new books saved.`);
     }
-    records.forEach(book => {
-        const json = JSON.stringify(book);
-        try{
-            if(fs.existsSync(`${cachePath}/${book.title}`)){
-                console.log(`${book.title} already exists in cache`);
-            }
-            else{
-                fs.writeFileSync(`${cachePath}/${book.title}.json`,json,'utf-8')
-                console.log(`${book.title} saved to cache successfully`);
-            }
-        }
-        catch(err){
-            console.error("Error while saving book data:", err)
-        }
-    });
+    catch(err){
+        console.error("Error while trying to open file books", err)
+    }
+    //saving errors
+    try{
+        fs.mkdirSync('../output', { recursive: true });
+        const savedErrors = fs.existsSync('../output/erros.json')
+            ? JSON.parse(fs.readFileSync('../output/errors.json', 'utf-8'))
+            : [];
+        const existingUrls = new Set(savedErrors.map((error) => error.product_url));
+        const newErrors = errors.filter((error) => !existingUrls.has(error.product_url));
+        fs.writeFileSync('../output/errors.json', JSON.stringify([...savedErrors, ...newErrors], null, 2), 'utf-8');
+    }
+    catch(err){
+        console.error("Error while trying to open file errors", err)
+    }
+    // console.log(records);
     return records;
+}
+
+function validateData(data){
+    const validator = z.object({
+        title: z.string(),
+        product_url: z.string().includes('https://books.toscrape.com/'),
+        price_text: z.string().includes('£'),
+        price_gbp: z.float32(),
+        availability_text: z.string(),
+        rating_text: z.string(),
+        description: z.string(),
+        source_page: z.string(),
+        fetched_at: z.string()
+    });
+    return validator.safeParse(data);
 }
 
 async function main(){
