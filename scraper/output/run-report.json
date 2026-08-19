@@ -1,0 +1,38 @@
+[
+  {
+    "start_time": "2026-08-19T15:06:44.852Z",
+    "duration_ms": 58777,
+    "pages_fetched": 3,
+    "cache_hits": 3,
+    "valid_records": 60,
+    "invalid_records": 0,
+    "failed_pages": 3
+  },
+  {
+    "start_time": "2026-08-19T15:38:07.806Z",
+    "duration_ms": 333,
+    "pages_fetched": 3,
+    "cache_hits": 3,
+    "valid_records": 0,
+    "invalid_records": 0,
+    "failed_pages": 63
+  },
+  {
+    "start_time": "2026-08-19T15:38:27.807Z",
+    "duration_ms": 55929,
+    "pages_fetched": 3,
+    "cache_hits": 3,
+    "valid_records": 60,
+    "invalid_records": 0,
+    "failed_pages": 3
+  },
+  {
+    "start_time": "2026-08-19T15:39:53.009Z",
+    "duration_ms": 55783,
+    "pages_fetched": 3,
+    "cache_hits": 3,
+    "valid_records": 60,
+    "invalid_records": 0,
+    "failed_pages": 3
+  }
+]
